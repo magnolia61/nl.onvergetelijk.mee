@@ -6,8 +6,8 @@ use CRM_Mee_ExtensionUtil as E;
 
 function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partditevent = NULL, $array_status  = NULL, $array_criteria = NULL) {
 
-    $extdebug               = 0;
-    $apidebug               = FALSE;
+    $extdebug = 3;
+    $apidebug = FALSE;
 
     wachthond($extdebug,2, "########################################################################");
     wachthond($extdebug,1, "### MEE 0.X - GAAT DEZE PERSOON MEE ALS DEEL OF LEID?",         "[START]");
@@ -61,6 +61,11 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
             $array_status = leeftijd_civicrm_status($array_partditevent, $array_criteria);
         }
     }
+
+    wachthond($extdebug,3, 'array_partditevent',    $array_partditevent);
+    wachthond($extdebug,3, 'array_status',          $array_status);
+    wachthond($extdebug,3, 'array_criteria',        $array_criteria);
+
     // -------------------------------------------------------------------------
     // EINDE SELF-SERVICE MODUS
     // -------------------------------------------------------------------------
@@ -113,7 +118,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,4, 'statusids_negative',  $status_negative);
 
     wachthond($extdebug,4, "########################################################################");
-    wachthond($extdebug,2, "### MEE 0.3 - GET VALUES FROM array_partditevent",    $array_partditevent);
+    wachthond($extdebug,2, "### MEE 0.3 - GET VALUES FROM array_partditevent");
     wachthond($extdebug,2, "########################################################################");
 
     $displayname                            = $array_partditevent['displayname']                        ?? NULL;
@@ -173,7 +178,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'ditevent_event_type_label',             $ditevent_event_type_label);    
 
     wachthond($extdebug,2, "########################################################################");
-    wachthond($extdebug,2, "### MEE 0.4 - GET VALUES FROM array_allpart_eventjaar",$allpart_array);
+    wachthond($extdebug,2, "### MEE 0.4 - GET VALUES FROM array_allpart_eventjaar",    $allpart_array);
     wachthond($extdebug,3, "########################################################################");
 
     $eventjaar_refdate                  = $allpart_array['refdate'];
@@ -252,49 +257,6 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
     // --- EINDE TOEWIJZING ---
 
-    wachthond($extdebug,2, "########################################################################");     
-    wachthond($extdebug,1, "### MEE 0.5 - CHECK PRIMARY EVENT IF ONE", $array_criteria_ditevent);
-    wachthond($extdebug,2, "########################################################################");     
-
-/*
-    wachthond($extdebug,2, "########################################################################");    
-    wachthond($extdebug,1, "### MEE 0.3 - CHECK PRIMARY EVENT IF ONE", $array_criteria_ditevent);
-    wachthond($extdebug,2, "########################################################################");    
-
-    // 1. Log de startwaarde
-    wachthond($extdebug,3, 'START: Huidige ditevent_event_type_id', $ditevent_event_type_id);
-
-    if ($ditevent_event_type_id) {
-        $ditevent_event_type_id     = $ditevent_event_type_id;
-        // Geen log nodig, waarde verandert niet
-    }
-
-    if ($eventjaar_one_event_type_id) {
-        wachthond($extdebug,2, 'LOGICA: Er is precies 1 event gevonden (One) -> Overschrijven');
-        
-        // Als er maar 1 event is in het jaar, overschrijf dan met die ID.
-        $ditevent_event_type_id     = $eventjaar_one_event_type_id;
-        $ditevent_part_status_id    = $eventjaar_one_part_status_id;
-        
-        wachthond($extdebug,3, '-> Nieuwe Type ID (uit One):', $ditevent_event_type_id);
-        wachthond($extdebug,3, '-> Nieuwe Status ID (uit One):', $ditevent_part_status_id);
-    }
-
-    if ($eventjaar_all_count > 1) {
-        wachthond($extdebug,2, 'LOGICA: Er zijn meerdere events (Count > 1) -> Pak Positieve', $eventjaar_all_count);
-        
-        // Als er meer dan 1 event is, pak dan de 'Positieve' (bevestigde) ID.
-        $ditevent_event_type_id     = $eventjaar_pos_event_type_id;
-        $ditevent_part_status_id    = $eventjaar_pos_part_status_id;
-        
-        wachthond($extdebug,3, '-> Nieuwe Type ID (uit Pos):', $ditevent_event_type_id);
-        wachthond($extdebug,3, '-> Nieuwe Status ID (uit Pos):', $ditevent_part_status_id);
-    }
-
-    wachthond($extdebug,2, "--- DEFINITIEVE KEUZE ---");
-    wachthond($extdebug,3, 'ditevent_event_type_id',        $ditevent_event_type_id);
-    wachthond($extdebug,3, 'ditevent_part_status_id',       $ditevent_part_status_id);
-*/
     wachthond($extdebug,2, "########################################################################");   
     wachthond($extdebug,1, "### MEE 0.6 - GET VALUES FROM array_criteria_ditevent", $array_criteria_ditevent);
     wachthond($extdebug,2, "########################################################################");   
@@ -316,10 +278,15 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,1, "### MEE 0.7 - GET VALUES FROM array_status_ditevent", $array_status_ditevent);
     wachthond($extdebug,2, "########################################################################");   
 
-    $ditevent_part_status_id            = $array_status_ditevent['ditevent_part_status_id'];
-    $ditevent_part_status_name          = $array_status_ditevent['ditevent_part_status_name'];
+    $ditevent_part_status_id            = $array_status_ditevent['status_id'];
+    $ditevent_part_status_name          = $array_status_ditevent['status_label'];
     $ditevent_deelnamestatus            = $array_status_ditevent['ditevent_deelnamestatus'];
 
+    wachthond($extdebug,3, 'ditevent_part_status_id',           $ditevent_part_status_id);
+    wachthond($extdebug,3, 'ditevent_part_status_name',         $ditevent_part_status_name);
+    wachthond($extdebug,3, 'ditevent_deelnamestatus',           $ditevent_deelnamestatus);
+
+/*
     if ($ditevent_part_rol == 'deelnemer') {
         $ditevent_criteriacheck_start   = $array_status_ditevent['criteriacheck_start'];
         $ditevent_criteriacheck_einde   = $array_status_ditevent['criteriacheck_einde'];
@@ -327,17 +294,13 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $ditevent_wachtlijst_eraf       = $array_status_ditevent['wachtlijst_eraf'];  
     }
 
-    wachthond($extdebug,3, 'ditevent_part_status_id',           $ditevent_part_status_id);
-    wachthond($extdebug,3, 'ditevent_part_status_name',         $ditevent_part_status_name);
-    wachthond($extdebug,3, 'ditevent_deelnamestatus',           $ditevent_deelnamestatus);
-
     if ($ditevent_part_rol == 'deelnemer') {
         wachthond($extdebug,3, 'ditevent_criteriacheck_start',  $ditevent_criteriacheck_start);
         wachthond($extdebug,3, 'ditevent_criteriacheck_einde',  $ditevent_criteriacheck_einde);
         wachthond($extdebug,3, 'ditevent_wachtlijst_erop',      $ditevent_wachtlijst_erop);
         wachthond($extdebug,3, 'ditevent_wachtlijst_eraf',      $ditevent_wachtlijst_eraf);
     }
-
+*/
     ###########################################################################################
     ### HIERONDER VANUIT CV EXT
     ###########################################################################################
@@ -359,10 +322,10 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $diteventdeeltst  = 3;
     $diteventdeeltxt  = 'ERR';
 
-    wachthond($extdebug,4, 'eventtypesdeelall',             $eventtypesdeelall);
-    wachthond($extdebug,4, 'ditevent_event_type_id',        $ditevent_event_type_id);
-    wachthond($extdebug,4, 'status_positive',               $status_positive);
-    wachthond($extdebug,4, 'ditevent_part_status_id',       $ditevent_part_status_id);
+    wachthond($extdebug,3, 'eventtypesdeelall',             $eventtypesdeelall);
+    wachthond($extdebug,3, 'ditevent_event_type_id',        $ditevent_event_type_id);
+    wachthond($extdebug,3, 'status_positive',               $status_positive);
+    wachthond($extdebug,3, 'ditevent_part_status_id',       $ditevent_part_status_id);
 
     if (in_array($ditevent_event_type_id, array_values($eventtypesdeelall))) {
 
@@ -374,7 +337,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $diteventleidstf = 0;
         $diteventleidtxt = 'NOT';
     
-        if ( in_array($ditevent_part_status_id, array_values($status_positive)) ) {
+        if (       in_array($ditevent_part_status_id, array_values($status_positive)) ) {
             $diteventdeelyes = 1;
             $diteventdeelnot = 0;
             $diteventdeelmss = 0;
@@ -672,11 +635,11 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
     // DEBUG: Toon de variabelen waarop we gaan beslissen
     wachthond($extdebug, 3, "DEBUG 4.1 INPUTS:", [
-        'Pos Count' => $ditjaar_pos_leid_count,
-        'One StatusID' => $ditjaar_one_leid_part_status_id,
-        'Functie' => $eventjaar_pos_leid_functie,
-        'Kampkort' => $eventjaar_pos_leid_kampkort,
-        'TypeID' => $eventjaar_pos_leid_event_type_id
+        'Pos Count'     => $ditjaar_pos_leid_count,
+        'One StatusID'  => $ditjaar_one_leid_part_status_id,
+        'Functie'       => $eventjaar_pos_leid_functie,
+        'Kampkort'      => $eventjaar_pos_leid_kampkort,
+        'TypeID'        => $eventjaar_pos_leid_event_type_id
     ]);
 
     // 2. De Waterval Logica
