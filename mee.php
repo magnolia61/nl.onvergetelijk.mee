@@ -6,7 +6,7 @@ use CRM_Mee_ExtensionUtil as E;
 
 function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partditevent = NULL, $array_status  = NULL, $array_criteria = NULL) {
 
-    $extdebug = 3;
+    $extdebug = 0;
     $apidebug = FALSE;
 
     wachthond($extdebug,2, "########################################################################");
