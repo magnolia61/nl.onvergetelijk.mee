@@ -1,12 +1,21 @@
 <?php
 
+// === FUNCTIE-INDEX ===
+// Bestand: mee.php
+// Functies in dit bestand:
+//   mee_civicrm_configure()
+//   mee_civicrm_config()     Implements hook_civicrm_config().
+//   mee_civicrm_install()    Implements hook_civicrm_install().
+//   mee_civicrm_enable()     Implements hook_civicrm_enable().
+// === EINDE FUNCTIE-INDEX ===
+
 require_once 'mee.civix.php';
 
 use CRM_Mee_ExtensionUtil as E;
 
 function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partditevent = NULL, $array_status  = NULL, $array_criteria = NULL) {
 
-    $extdebug = 3;
+    $extdebug = 0;
     $apidebug = FALSE;
 
     wachthond($extdebug,2, "########################################################################");
@@ -25,7 +34,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
             return;
         }
         // 1. Zorg dat we statussen hebben
-        if (function_exists('find_partstatus') && !Civi::cache()->get('cache_status_positive')) {
+        if (function_exists('find_partstatus')) {
             find_partstatus();
         }
         // 2. Haal ALLPART op
@@ -52,13 +61,16 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
             $leeftijd_ditevent_decimalen = $contact_data['leeftijd_nextkamp_deci'];
             wachthond($extdebug, 4, "Self-Service Leeftijd (cid2cont)", $leeftijd_ditevent_decimalen);
         }
-        // 4. Construeer CRITERIA array
-        if (empty($array_criteria) && function_exists('leeftijd_civicrm_criteria')) {
-            $array_criteria = leeftijd_civicrm_criteria($array_partditevent, $leeftijd_ditevent_decimalen);
+        // 4. Construeer CRITERIA array (Let op: Nieuwe functienaam en parameters!)
+        if (empty($array_criteria) && function_exists('partstatus_criteria')) {
+            $array_criteria = partstatus_criteria($pid, $array_partditevent, $leeftijd_ditevent_decimalen);
+            wachthond($extdebug, 4, "Criteria berekend via partstatus_criteria",      $array_criteria);
         }
-        // 5. Construeer STATUS array
-        if (empty($array_status) && function_exists('leeftijd_civicrm_status')) {
-            $array_status = leeftijd_civicrm_status($array_partditevent, $array_criteria);
+
+        // 5. Construeer STATUS array (De executor in helpers.php)
+        if (empty($array_status) && function_exists('partstatus_configure')) {
+            $array_status   = partstatus_configure($pid, $array_partditevent, $array_criteria);
+            wachthond($extdebug, 4, "Status geconfigureerd via partstatus_configure", $array_status);
         }
     }
 
@@ -95,7 +107,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventtypesdeelall      = $eventtypes['deel_all'];
     $eventtypesleidall      = $eventtypes['leid_all'];
 
-    $today_kampjaar         = Civi::cache()->get('cache_today_kampjaar')            ?? NULL;
+    $today_kampjaar         = find_fiscalyear()['today_jaar'] ?? NULL;
     wachthond($extdebug,4, 'today_kampjaar',        $today_kampjaar);
 
     wachthond($extdebug,3, "########################################################################");
@@ -286,6 +298,15 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'ditevent_part_status_name',         $ditevent_part_status_name);
     wachthond($extdebug,3, 'ditevent_deelnamestatus',           $ditevent_deelnamestatus);
 
+    // M61: Mapping aangepast aan de nieuwe 'Super Array' structuur van de engine
+    $ditevent_part_status_id            = $array_status_ditevent['status_id']           ?? NULL;
+    $ditevent_part_status_name          = $array_status_ditevent['status_label']        ?? NULL;
+    $ditevent_deelnamestatus            = $array_status_ditevent['status_label']        ?? NULL; // Was voorheen 'ditevent_deelnamestatus'
+
+    wachthond($extdebug,3, 'ditevent_part_status_id',           $ditevent_part_status_id);
+    wachthond($extdebug,3, 'ditevent_part_status_name',         $ditevent_part_status_name);
+    wachthond($extdebug,3, 'ditevent_deelnamestatus',           $ditevent_deelnamestatus);
+
 /*
     if ($ditevent_part_rol == 'deelnemer') {
         $ditevent_criteriacheck_start   = $array_status_ditevent['criteriacheck_start'];
@@ -327,7 +348,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'status_positive',               $status_positive);
     wachthond($extdebug,3, 'ditevent_part_status_id',       $ditevent_part_status_id);
 
-    if (in_array($ditevent_event_type_id, array_values($eventtypesdeelall))) {
+    if (in_array($ditevent_event_type_id, $eventtypesdeelall)) {
 
         # ZET BIJ DEELNEMER EVENT DE STATUS VOOR LEID OP NOT 
         $diteventleidyes = 0;
@@ -386,7 +407,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,2, "### MEE 1.2 CHECK OF $displayname DIT EVENT MEEGAAT", "[TOP $ditevent_event_kampkort]");
     wachthond($extdebug,3, "########################################################################");   
 
-    if (in_array($ditevent_event_type_id, array_values($eventtypesdeeltop))) {
+    if (in_array($ditevent_event_type_id, $eventtypesdeeltop)) {
         $diteventdeeltop = 1;
         wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT DEEL VOOR HET TOPKAMP:', $ditevent_event_title);     
     } else {
@@ -397,7 +418,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,2, "### MEE 1.3 CHECK OF $displayname DIT EVENT MEEGAAT", "[DEEL TST $ditevent_event_kampkort]");
     wachthond($extdebug,3, "########################################################################");   
 
-    if (in_array($ditevent_event_type_id, array_values($eventtypesdeeltest))) {
+    if (in_array($ditevent_event_type_id, $eventtypesdeeltest)) {
         $diteventdeeltst = 1;
         wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT DEEL VOOR EEN TEST EVENT:', $ditevent_event_title);
     } else {
@@ -427,7 +448,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'eventtypesleidall',         $eventtypesleidall);
     wachthond($extdebug,3, 'ditevent_event_type_id',    $ditevent_event_type_id);
 
-    if (in_array($ditevent_event_type_id, array_values($eventtypesleidall))) {
+    if (in_array($ditevent_event_type_id, $eventtypesleidall)) {
 
         # ZET BIJ LEIDING EVENT DE STATUS VOOR DEEL OP NOT 
         $diteventdeelyes = 0;
@@ -522,7 +543,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,2, "### MEE 2.4 CHECK OF $displayname DIT EVENT MEEGAAT", "[LEID TST $ditevent_event_kampkort]");
     wachthond($extdebug,3, "########################################################################");   
 
-    if (in_array($ditevent_event_type_id, array_values($eventtypesleidtest))) {
+    if (in_array($ditevent_event_type_id, $eventtypesleidtest)) {
         $diteventleidtst = 1;
         wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT LEID VOOR EEN TEST EVENT:', $ditevent_event_title);
     } else {
@@ -581,12 +602,12 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
         // Check Topkamp (Gebruik hier specifiek de POSITIEVE event ID)
         // Let op: gebruik hier de variabele die we eerder bespraken: $eventjaar_pos_deel_event_type_id
-        if (in_array($eventjaar_pos_deel_event_type_id, array_values($eventtypesdeeltop))) {
+        if (in_array($eventjaar_pos_deel_event_type_id, $eventtypesdeeltop)) {
             $ditjaardeeltop = 1;
         }
 
         // Check Test Event
-        if (in_array($eventjaar_pos_deel_event_type_id, array_values($eventtypesdeeltest))) {
+        if (in_array($eventjaar_pos_deel_event_type_id, $eventtypesdeeltest)) {
             $ditjaardeeltst = 1;
         }
     }
@@ -655,7 +676,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $ditjaarleidtxt = 'YES'; // Of 'WEL'
 
         // Stap 2: Check op TEST event
-        if (in_array($eventjaar_pos_leid_event_type_id, array_values($eventtypesleidtest))) {
+        if (in_array($eventjaar_pos_leid_event_type_id, $eventtypesleidtest)) {
             wachthond($extdebug, 2, "-> LOGICA: Het is een TEST event type");
             $ditjaarleidtst = 1;
         }
@@ -742,7 +763,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     # BEPAAL DE DEELNAMESTATUS DIT JAAR LEID TST
     ##########################################################################################       
 
-    if (in_array($ditjaar_one_leid_event_type_id, array_values($eventtypesleidtest))) {
+    if (in_array($ditjaar_one_leid_event_type_id, $eventtypesleidtest)) {
         $ditjaarleidtst = 1;
         wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR EEN TEST EVENT:', $ditjaar_one_leid_event_title);
     } else {
@@ -824,7 +845,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaardeeltst   = 3;
     $eventjaardeeltxt   = 'ERR';
 
-    if (in_array($eventjaar_pos_deel_event_type_id, array_values($eventtypesdeel))) {
+    if (in_array($eventjaar_pos_deel_event_type_id, $eventtypesdeel)) {
 
         if (       in_array($eventjaar_pos_deel_part_status_id, array_values($status_positive)) )   {
                 $eventjaardeelyes = 1;
@@ -911,7 +932,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,4, 'eventjaar_pos_leid_part_status_id', $eventjaar_pos_leid_part_status_id);
     wachthond($extdebug,4, 'eventypesleid',                     $eventtypesleid);
 
-    if (in_array($eventjaar_pos_leid_event_type_id, array_values($eventtypesleid))) {
+    if (in_array($eventjaar_pos_leid_event_type_id, $eventtypesleid)) {
 
         if (       in_array($eventjaar_pos_leid_part_status_id, array_values($status_positive)) )   {
             $eventjaarleidyes = 1;
@@ -955,7 +976,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         # OVERRIDE IF STAFFUNCTIE EN NIET FYSIEK MEE OP KAMP
         ##########################################################################################
 /*
-#       if (in_array($eventjaar_pos_leid_event_type_id, array_values($eventtypesleid))) {
+#       if (in_array($eventjaar_pos_leid_event_type_id, $eventtypesleid)) {
 
         if (in_array($eventjaar_one_part_eventid, $kampids_leid) AND (in_array($ditevent_leid_welkkamp, array("reunie", "bestuurstaken", "waarnodig")))) {
             $eventjaarleidyes = 0;
