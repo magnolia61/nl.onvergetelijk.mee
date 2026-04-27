@@ -1,13 +1,15 @@
 <?php
 
-// === FUNCTIE-INDEX ===
-// Bestand: mee.php
-// Functies in dit bestand:
-//   mee_civicrm_configure()
-//   mee_civicrm_config()     Implements hook_civicrm_config().
-//   mee_civicrm_install()    Implements hook_civicrm_install().
-//   mee_civicrm_enable()     Implements hook_civicrm_enable().
-// === EINDE FUNCTIE-INDEX ===
+/**
+ * =======================================================================================
+ * FUNCTIE-INDEX: mee.php
+ * =======================================================================================
+ *   mee_civicrm_configure()
+ *   mee_civicrm_config()     Implements hook_civicrm_config().
+ *   mee_civicrm_install()    Implements hook_civicrm_install().
+ *   mee_civicrm_enable()     Implements hook_civicrm_enable().
+ * =======================================================================================
+ */
 
 require_once 'mee.civix.php';
 
