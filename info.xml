@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <extension key="nl.onvergetelijk.mee" type="module">
   <file>mee</file>
-  <name>Onvergetelijk - MEE</name>
-  <description>Registratie van MEE-trajecten en aanmeldvoortgang van deelnemers</description>
+  <name>Onvergetelijk - Mee</name>
+  <description>Administratie van intentie om komende kamp weer mee te gaan</description>
   <license>AGPL-3.0</license>
   <maintainer>
     <author>Richard van Oosterhout</author>
