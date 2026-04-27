@@ -41,7 +41,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         }
         // 2. Haal ALLPART op
         if (empty($allpart_array)) {
-            $allpart_array = base_find_allpart($contact_id, date("Y-m-d"));
+            $allpart_array = base_find_allpart($contact_id, date("Y-m-d")) ?: [];
         }
         // 3. Haal PARTDITEVENT op
         if (empty($array_partditevent)) {
