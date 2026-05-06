@@ -17,8 +17,11 @@ use CRM_Mee_ExtensionUtil as E;
 
 function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partditevent = NULL, $array_status  = NULL, $array_criteria = NULL) {
 
-    $extdebug = 0;
+    $extdebug = 'mee.configure'; // Kanaal voor centrale debug-config; niveau wordt opgezocht in ozk.debug.config.php
     $apidebug = FALSE;
+
+    $mee_configure_start = microtime(TRUE);
+    watchdog('civicrm_timing', base_microtimer("START mee_configure [CID: $contact_id]"), NULL, WATCHDOG_DEBUG);
 
     wachthond($extdebug,2, "########################################################################");
     wachthond($extdebug,1, "### MEE 0.X - GAAT DEZE PERSOON MEE ALS DEEL OF LEID?",         "[START]");
@@ -136,7 +139,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,2, "########################################################################");
 
     $displayname                            = $array_partditevent['displayname']                        ?? NULL;
-    $contact_id                             = $array_partditevent['contact_id']                         ?? NULL;
+    $contact_id                             = $array_partditevent['contact_id']                         ?? $contact_id;
 
     $ditevent_part_contact_id               = $array_partditevent['contact_id']                         ?? NULL;
     $ditevent_part_eventid                  = $array_partditevent['event_id']                           ?? NULL;
@@ -207,7 +210,6 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaar_pos_deel_count           = $allpart_array['result_allpart_pos_deel_count'];
     $eventjaar_pos_leid_count           = $allpart_array['result_allpart_pos_leid_count'];
 
-    $eventjaar_all_count                = $allpart_array['result_allpart_all_count'];
     $eventjaar_all_deel_count           = $allpart_array['result_allpart_all_deel_count'];
     $eventjaar_all_leid_count           = $allpart_array['result_allpart_all_leid_count'];
 
@@ -292,18 +294,9 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,1, "### MEE 0.7 - GET VALUES FROM array_status_ditevent", $array_status_ditevent);
     wachthond($extdebug,2, "########################################################################");   
 
-    $ditevent_part_status_id            = $array_status_ditevent['status_id'];
-    $ditevent_part_status_name          = $array_status_ditevent['status_label'];
-    $ditevent_deelnamestatus            = $array_status_ditevent['ditevent_deelnamestatus'];
-
-    wachthond($extdebug,3, 'ditevent_part_status_id',           $ditevent_part_status_id);
-    wachthond($extdebug,3, 'ditevent_part_status_name',         $ditevent_part_status_name);
-    wachthond($extdebug,3, 'ditevent_deelnamestatus',           $ditevent_deelnamestatus);
-
-    // M61: Mapping aangepast aan de nieuwe 'Super Array' structuur van de engine
     $ditevent_part_status_id            = $array_status_ditevent['status_id']           ?? NULL;
     $ditevent_part_status_name          = $array_status_ditevent['status_label']        ?? NULL;
-    $ditevent_deelnamestatus            = $array_status_ditevent['status_label']        ?? NULL; // Was voorheen 'ditevent_deelnamestatus'
+    $ditevent_deelnamestatus            = $array_status_ditevent['status_label']        ?? NULL;
 
     wachthond($extdebug,3, 'ditevent_part_status_id',           $ditevent_part_status_id);
     wachthond($extdebug,3, 'ditevent_part_status_name',         $ditevent_part_status_name);
@@ -343,6 +336,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $diteventdeelmss  = 3;
     $diteventdeeltop  = 3;
     $diteventdeeltst  = 3;
+    $diteventdeelstf  = 0;
     $diteventdeeltxt  = 'ERR';
 
     wachthond($extdebug,3, 'eventtypesdeelall',             $eventtypesdeelall);
@@ -411,7 +405,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
     if (in_array($ditevent_event_type_id, $eventtypesdeeltop)) {
         $diteventdeeltop = 1;
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT DEEL VOOR HET TOPKAMP:', $ditevent_event_title);     
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT DEEL VOOR HET TOPKAMP:', $ditevent_event_kampkort);     
     } else {
         $diteventdeeltop = 0;
     }
@@ -422,7 +416,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
     if (in_array($ditevent_event_type_id, $eventtypesdeeltest)) {
         $diteventdeeltst = 1;
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT DEEL VOOR EEN TEST EVENT:', $ditevent_event_title);
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT DEEL VOOR EEN TEST EVENT:', $ditevent_event_kampkort);
     } else {
         $diteventdeeltst = 0;
     }
@@ -547,7 +541,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
     if (in_array($ditevent_event_type_id, $eventtypesleidtest)) {
         $diteventleidtst = 1;
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT LEID VOOR EEN TEST EVENT:', $ditevent_event_title);
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT LEID VOOR EEN TEST EVENT:', $ditevent_event_kampkort);
     } else {
         $diteventleidtst = 0;
     }
@@ -560,16 +554,8 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'diteventleidtxt 1', $diteventleidtxt);
 
     if ($ditevent_part_id > 0) {
-
         wachthond($extdebug,4, 'eventypesdeel',     $eventtypesdeel);
         wachthond($extdebug,4, 'eventypesleid',     $eventtypesleid);
-
-        wachthond($extdebug,4, 'kampids_deel',      $kampids_deel);
-        wachthond($extdebug,4, 'kampids_leid',      $kampids_leid);
-        wachthond($extdebug,4, 'kampids_top',       $kampids_top);
-
-        wachthond($extdebug,4, 'kampids_deel_all',  $kampids_deel_all);
-        wachthond($extdebug,4, 'kampids_leid_all',  $kampids_leid_all);
     }
 
     wachthond($extdebug,2, "DITEVENT GAAT $displayname $diteventleidtxt MEE ALS LEIDING", "[EID $ditevent_part_eventid / TYPE $ditevent_event_type_id]");
@@ -591,7 +577,8 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $ditjaardeelmss = 3;
     $ditjaardeeltop = 3;
     $ditjaardeeltst = 3;
-    $ditjaardeeltxt = 'ERR';      
+    $ditjaardeelstf = 0;
+    $ditjaardeeltxt = 'ERR';
 
     // 2. De Waterval Logica (Hoogste prioriteit eerst)
     
@@ -716,18 +703,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         wachthond($extdebug,4, 'status_misschien', $status_waiting);
     }
     
-    // C. GEEN WACHTLIJST? IS ER INTERESSE/BELANGSTELLING? (Oude logica behouden)
-    // Check: Datum belangstelling >= Start boekjaar
-    elseif (isset($datum_belangstelling) && isset($today_fiscalyear_start) && date_biggerequal($datum_belangstelling, $today_fiscalyear_start) == 1) {
-        wachthond($extdebug, 2, "-> LOGICA: Datum belangstelling ($datum_belangstelling) valt in dit boekjaar");
-
-        $ditjaarleidyes = 0;
-        $ditjaarleidnot = 0;
-        $ditjaarleidmss = 1;
-        $ditjaarleidtxt = 'MSS'; // Belangstelling telt als misschien
-    }
-
-    // D. IS ER EEN ANNULERING?
+    // C. IS ER EEN ANNULERING?
     elseif (in_array($ditjaar_one_leid_part_status_id, array_values($status_negative))) {
         wachthond($extdebug, 2, "-> LOGICA: Status is NEGATIEF/GEANNULEERD ($ditjaar_one_leid_part_status_id)");
 
@@ -756,7 +732,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $ditjaarleidyes = 0;
         $ditjaarleidstf = 1;
         $ditjaarleidtxt = 'NOT';
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR STAFTAKEN:', $ditevent_event_title);
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR STAFTAKEN:', $ditevent_event_kampkort);
     } else {
         $ditjaarleidstf = 0;
     }
@@ -767,7 +743,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
 
     if (in_array($ditjaar_one_leid_event_type_id, $eventtypesleidtest)) {
         $ditjaarleidtst = 1;
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR EEN TEST EVENT:', $ditjaar_one_leid_event_title);
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR EEN TEST EVENT:', $ditjaar_one_leid_event_type_id);
     } else {
         $ditjaarleidtst = 0;
     }
@@ -777,31 +753,6 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'ditjaarleidmss 1', $ditjaarleidmss);
     wachthond($extdebug,3, 'ditjaarleidtst 1', $ditjaarleidtst);
     wachthond($extdebug,3, 'ditjaarleidtxt 1', $ditjaarleidtxt);
-
-    ##########################################################################################
-    # HANDLE MEERDERE REGISTRATIES PER JAAR [LEID]
-    ##########################################################################################
-
-    if ($ditjaar_all_leid_count  > 1) {
-
-      if ($result_partditjaar_pos_leid_count == 1) {
-
-        if ($ditjaar_pos_leid_part_id > 0 AND $ditjaar_pos_leid_part_rol == 'leiding') {
-
-          $ditjaarleidyes = 1;
-          $ditjaarleidnot = 0;
-          $ditjaarleidmss = 0;
-          $ditjaarleidtxt = 'WEL';
-
-          wachthond($extdebug,3, 'ditjaarleidyes 2', $ditjaarleidyes);
-          wachthond($extdebug,3, 'ditjaarleidnot 2', $ditjaarleidnot);
-          wachthond($extdebug,3, 'ditjaarleidmss 2', $ditjaarleidmss);
-          wachthond($extdebug,3, 'ditjaarleidstf 2', $ditjaarleidstf);
-          wachthond($extdebug,3, 'ditjaarleidtst 2', $ditjaarleidtst);
-          wachthond($extdebug,3, 'ditjaarleidtxt 2', $ditjaarleidtxt);
-        }
-      }
-    }
 
 /*
     ##########################################################################################
@@ -845,6 +796,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaardeelmss   = 3;
     $eventjaardeeltop   = 3;
     $eventjaardeeltst   = 3;
+    $eventjaardeelstf   = 0;
     $eventjaardeeltxt   = 'ERR';
 
     if (in_array($eventjaar_pos_deel_event_type_id, $eventtypesdeel)) {
@@ -885,31 +837,6 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
                 $eventjaardeeltxt = 'NOT';      
     }
 
-    ##########################################################################################
-    # HANDLE MEERDERE REGISTRATIES PER JAAR [LEID]
-    ##########################################################################################
-
-    if ($ditjaar_all_leid_count  > 1) {
-
-        if ($result_partditjaar_pos_leid_count == 1) {
-
-            if ($ditjaar_pos_leid_part_id > 0 AND $ditjaar_pos_leid_part_rol == 'leiding') {
-
-                  $ditjaarleidyes = 1;
-                  $ditjaarleidnot = 0;
-                  $ditjaarleidmss = 0;
-                  $ditjaarleidtxt = 'WEL';
-
-                  wachthond($extdebug,3, 'ditjaarleidyes 2', $ditjaarleidyes);
-                  wachthond($extdebug,3, 'ditjaarleidnot 2', $ditjaarleidnot);
-                  wachthond($extdebug,3, 'ditjaarleidmss 2', $ditjaarleidmss);
-                  wachthond($extdebug,3, 'ditjaarleidstf 2', $ditjaarleidstf);
-                  wachthond($extdebug,3, 'ditjaarleidtst 2', $ditjaarleidtst);
-                  wachthond($extdebug,3, 'ditjaarleidtxt 2', $ditjaarleidtxt);
-            }
-        }
-    }
-
     wachthond($extdebug,2, "EVENTJAAR $ditevent_kampjaar GAAT $displayname $eventjaardeeltxt MEE ALS DEELNEMER", "[EID $eventjaar_pos_deel_event_id / TYPE $eventjaar_pos_deel_event_type_id]");
 
     wachthond($extdebug,3, "########################################################################");
@@ -927,6 +854,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaarleidyes = 3;
     $eventjaarleidnot = 3;
     $eventjaarleidmss = 3;
+    $eventjaarleidstf = 3;
     $eventjaarleidtst = 3;
     $eventjaarleidtxt = 'ERR';
 
@@ -971,7 +899,9 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
       $eventjaarleidyes = 0;
       $eventjaarleidnot = 1;
       $eventjaarleidmss = 0;
-      $eventjaarleidtxt = 'NOT';      
+      $eventjaarleidstf = 0;
+      $eventjaarleidtst = 0;
+      $eventjaarleidtxt = 'NOT';
     }
 
         ##########################################################################################
@@ -999,31 +929,6 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
             $eventjaarleidstf = 0;
         }
 */
-        ##########################################################################################
-        # HANDLE MEERDERE REGISTRATIES PER JAAR [LEID]
-        ##########################################################################################
-
-        if ($result_eventjaar_all_leid_count  > 1) {
-
-            if ($result_eventjaar_pos_leid_count == 1) {
-
-                if ($eventjaar_pos_leid_part_id > 0 AND $eventjaar_pos_leid_part_rol == 'leiding') {
-
-                    $eventjaarleidyes = 1;
-                    $eventjaarleidnot = 0;
-                    $eventjaarleidmss = 0;
-                    $eventjaarleidtxt = 'WEL';
-
-                    wachthond($extdebug,3, 'eventjaarleidyes 2', $eventjaarleidyes);
-                    wachthond($extdebug,3, 'eventjaarleidnot 2', $eventjaarleidnot);
-                    wachthond($extdebug,3, 'eventjaarleidmss 2', $eventjaarleidmss);
-                    wachthond($extdebug,3, 'eventjaarleidstf 2', $eventjaarleidstf);
-                    wachthond($extdebug,3, 'eventjaarleidtst 2', $eventjaarleidtst);
-                    wachthond($extdebug,3, 'eventjaarleidtxt 2', $eventjaarleidtxt);
-                }
-            }
-        }
-
     wachthond($extdebug,2, "EVENTJAAR $ditevent_kampjaar GAAT $displayname $eventjaarleidtxt MEE ALS LEIDING", "[EID $eventjaar_pos_leid_part_eventid / TYPE $eventjaar_pos_leid_event_type_id]");
 
     wachthond($extdebug,3, 'eventjaarleidyes F', $eventjaarleidyes);
@@ -1124,11 +1029,11 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,1, '### MEE - RETURN COMBINED ARRAY',                          $return_array);
     wachthond($extdebug,1, "########################################################################");
 
-    return $return_array;    
+    $total_mee_configure_duur = number_format(microtime(TRUE) - $mee_configure_start, 3);
+    wachthond($extdebug, 3, "MEE duur totaal: {$total_mee_configure_duur}s");
+    watchdog('civicrm_timing', base_microtimer("EINDE mee_configure"), NULL, WATCHDOG_DEBUG);
 
-    wachthond($extdebug,2, "########################################################################");
-    wachthond($extdebug,1, "### MEE - GAAT DEZE PERSOON MEE ALS DEEL OF LEID?",             "[EINDE]");
-    wachthond($extdebug,2, "########################################################################");
+    return $return_array;
 
 }
 
