@@ -517,22 +517,15 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,2, "### MEE 2.3 CHECK OF $displayname DIT EVENT MEEGAAT", "[STAF $ditevent_event_kampkort]");
     wachthond($extdebug,3, "########################################################################");   
 
-    if (in_array($ditevent_leid_welkkamp, array("bestuurstaken", "kampstaf"))) {
+    // Welkkamp OR functie levert staf — één gecombineerde check zodat de else niet
+    // het resultaat van de eerste check overschrijft als de tweede niet voldoet.
+    if (in_array($ditevent_leid_welkkamp, array("bestuurstaken", "kampstaf")) || in_array($ditevent_leid_functie, array("bestuurslid", "kampstaf"))) {
         $diteventleidyes = 0;
         $diteventleidstf = 1;
         $diteventleidtxt = 'NOT';
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT LEID VOOR STAFTAKEN:',   "ditevent_leid_welkkamp: $ditevent_leid_welkkamp");   
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT LEID VOOR STAFTAKEN:', "welkkamp=$ditevent_leid_welkkamp / functie=$ditevent_leid_functie");
     } else {
-        $diteventleidstf = 0;     
-    }
-
-    if (in_array($ditevent_leid_functie, array("bestuurslid", "kampstaf"))) {
-        $diteventleidyes = 0;
-        $diteventleidstf = 1;
-        $diteventleidtxt = 'NOT';
-      wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT EVENT LEID VOOR STAFTAKEN:',   "ditevent_leid_functie: $ditevent_leid_functie");   
-    } else {
-        $diteventleidstf = 0;     
+        $diteventleidstf = 0;
     }
 
     wachthond($extdebug,2, "########################################################################");
@@ -613,7 +606,8 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     }
     
     // C. GEEN WACHTLIJST? IS ER EEN ANNULERING?
-    elseif (in_array($ditjaar_one_deel_part_status_id, array_values($status_negative))) {
+    // Null-check noodzakelijk: status_negative bevat 0, en in PHP is null == 0 (loose comparison)
+    elseif ($ditjaar_one_deel_part_status_id !== NULL && in_array($ditjaar_one_deel_part_status_id, array_values($status_negative))) {
         $ditjaardeelyes = 0;
         $ditjaardeelnot = 1; // Blijft 1
         $ditjaardeelmss = 0;
@@ -687,6 +681,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
              $reden = $is_staf_func ? "Functie match ($eventjaar_pos_leid_functie)" : "Kamp match ($eventjaar_pos_leid_kampkort)";
              wachthond($extdebug, 2, "-> OVERRIDE: PERSOON IS STAF/BESTUUR. Reden: $reden");
         } else {
+             $ditjaarleidstf = 0;
              wachthond($extdebug, 3, "-> CHECK: Geen staf/bestuur override van toepassing");
         }
     }
@@ -704,7 +699,8 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     }
     
     // C. IS ER EEN ANNULERING?
-    elseif (in_array($ditjaar_one_leid_part_status_id, array_values($status_negative))) {
+    // Null-check noodzakelijk: status_negative bevat 0, en in PHP is null == 0 (loose comparison)
+    elseif ($ditjaar_one_leid_part_status_id !== NULL && in_array($ditjaar_one_leid_part_status_id, array_values($status_negative))) {
         wachthond($extdebug, 2, "-> LOGICA: Status is NEGATIEF/GEANNULEERD ($ditjaar_one_leid_part_status_id)");
 
         $ditjaarleidyes = 0;
@@ -732,9 +728,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $ditjaarleidyes = 0;
         $ditjaarleidstf = 1;
         $ditjaarleidtxt = 'NOT';
-        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR STAFTAKEN:', $ditevent_event_kampkort);
-    } else {
-        $ditjaarleidstf = 0;
+        wachthond($extdebug,2, 'BETREFT EEN AANMELDING DIT JAAR LEID VOOR STAFTAKEN:', $ditjaar_leid_welkkamp);
     }
 
     ##########################################################################################
@@ -971,8 +965,9 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         'diteventdeelyes'   => $diteventdeelyes,
         'diteventdeelnot'   => $diteventdeelnot,
         'diteventdeelmss'   => $diteventdeelmss,
-        'diteventdeelstf'   => $diteventdeelstf,
+        'diteventdeeltop'   => $diteventdeeltop,
         'diteventdeeltst'   => $diteventdeeltst,
+        'diteventdeelstf'   => $diteventdeelstf,
         'diteventdeeltxt'   => $diteventdeeltxt,
         'diteventleidyes'   => $diteventleidyes,
         'diteventleidnot'   => $diteventleidnot,
