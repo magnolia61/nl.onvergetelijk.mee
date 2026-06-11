@@ -60,11 +60,16 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
             }
         }
 
-        $leeftijd_ditevent_decimalen = 0;        
+        // BELANGRIJK: gebruik NULL (niet 0) als startwaarde, zodat partstatus_criteria()
+        // de fallback-berekening via birth_date + event_start_date kan activeren
+        // wanneer leeftijd_nextkamp_deci niet beschikbaar is. Met 0 mislukt de === NULL check.
+        $leeftijd_ditevent_decimalen = NULL;
         $contact_data = base_cid2cont($contact_id);
         if (!empty($contact_data['leeftijd_nextkamp_deci'])) {
             $leeftijd_ditevent_decimalen = $contact_data['leeftijd_nextkamp_deci'];
             wachthond($extdebug, 4, "Self-Service Leeftijd (cid2cont)", $leeftijd_ditevent_decimalen);
+        } else {
+            wachthond($extdebug, 3, "leeftijd_nextkamp_deci niet beschikbaar. Fallback via birth_date in partstatus_criteria.", "[NULL]");
         }
         // 4. Construeer CRITERIA array (Let op: Nieuwe functienaam en parameters!)
         if (empty($array_criteria) && function_exists('partstatus_criteria')) {
@@ -225,9 +230,9 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaar_one_deel_event_type_id   = $allpart_array['result_allpart_one_deel_event_type_id'];
     $eventjaar_one_leid_event_type_id   = $allpart_array['result_allpart_one_leid_event_type_id'];
 
-    $eventjaar_one_part_status_id       = $allpart_array['result_allpart_one_part_status_id'];
-    $eventjaar_one_deel_part_status_id  = $allpart_array['result_allpart_one_deel_part_status_id'];
-    $eventjaar_one_leid_part_status_id  = $allpart_array['result_allpart_one_leid_part_status_id'];
+    $eventjaar_one_part_status_id       = $allpart_array['result_allpart_one_part_status_id']       ?? NULL;
+    $eventjaar_one_deel_part_status_id  = $allpart_array['result_allpart_one_deel_part_status_id']  ?? NULL;
+    $eventjaar_one_leid_part_status_id  = $allpart_array['result_allpart_one_leid_part_status_id']  ?? NULL;
 
     $eventjaar_one_kampkort             = $allpart_array['result_allpart_one_kampkort'];
     $eventjaar_one_deel_kampkort        = $allpart_array['result_allpart_one_deel_kampkort'];
@@ -245,9 +250,9 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaar_pos_deel_event_type_id   = $allpart_array['result_allpart_pos_deel_event_type_id'];
     $eventjaar_pos_leid_event_type_id   = $allpart_array['result_allpart_pos_leid_event_type_id'];
 
-    $eventjaar_pos_part_status_id       = $allpart_array['result_allpart_pos_part_status_id'];
-    $eventjaar_pos_deel_part_status_id  = $allpart_array['result_allpart_pos_deel_part_status_id'];
-    $eventjaar_pos_leid_part_status_id  = $allpart_array['result_allpart_pos_leid_part_status_id'];
+    $eventjaar_pos_part_status_id       = $allpart_array['result_allpart_pos_part_status_id']       ?? NULL;
+    $eventjaar_pos_deel_part_status_id  = $allpart_array['result_allpart_pos_deel_part_status_id']  ?? NULL;
+    $eventjaar_pos_leid_part_status_id  = $allpart_array['result_allpart_pos_leid_part_status_id']  ?? NULL;
 
     $eventjaar_pos_kampkort             = $allpart_array['result_allpart_pos_kampkort'];
     $eventjaar_pos_deel_kampkort        = $allpart_array['result_allpart_pos_deel_kampkort'];
@@ -842,6 +847,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     wachthond($extdebug,3, 'eventjaardeeltxt F', $eventjaardeeltxt);
 
     wachthond($extdebug,2, "########################################################################");
+    $eventjaar_pos_part_kampkort = $eventjaar_pos_part_kampkort ?? NULL;
     wachthond($extdebug,2, "### MEE 6.2 CHECK OF $displayname EVENTJAAR ($ditevent_kampjaar) MEEGAAT ALS LEIDING", $eventjaar_pos_part_kampkort);
     wachthond($extdebug,3, "########################################################################");
 
@@ -923,6 +929,7 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
             $eventjaarleidstf = 0;
         }
 */
+    $eventjaar_pos_leid_part_eventid = $eventjaar_pos_leid_part_eventid ?? NULL;
     wachthond($extdebug,2, "EVENTJAAR $ditevent_kampjaar GAAT $displayname $eventjaarleidtxt MEE ALS LEIDING", "[EID $eventjaar_pos_leid_part_eventid / TYPE $eventjaar_pos_leid_event_type_id]");
 
     wachthond($extdebug,3, 'eventjaarleidyes F', $eventjaarleidyes);
