@@ -619,6 +619,9 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $ditjaardeeltxt = 'ANN';
         
         wachthond($extdebug,4, 'status_negative', $status_negative);
+    } else {
+        // Waarde 3 blijft staan. Signaal dat iets upstream mis gaat (cache-vergiftiging of allpart leeg).
+        wachthond($extdebug, 1, "### MEE ALARM: ditjaardeelyes=3 (Fall-through) voor CID $contact_id! Check allpart-cache en upstream triggers.", "[ERR-DEEL3]");
     }
 
     // Logging
@@ -713,6 +716,10 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         $ditjaarleidtxt = 'ANN';
     } else {
         wachthond($extdebug, 2, "-> LOGICA: Geen van bovenstaande (Fall-through)");
+        // Waarde 3 blijft staan. Dit is een signaal dat iets UPSTREAM mis gaat
+        // (bijv. cache-vergiftiging of allpart zonder deelnames voor een actieve leidinggevende).
+        // ACL-blokken skippen verwijdering bij waarde 3.
+        wachthond($extdebug, 1, "### MEE ALARM: ditjaarleidyes=3 (Fall-through) voor CID $contact_id! Check allpart-cache en upstream triggers.", "[ERR-LEID3]");
     }
 
     // Logging
