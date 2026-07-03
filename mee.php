@@ -34,7 +34,8 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         wachthond($extdebug,3, "########################################################################");
 
         // A. Check dependencies
-        if (!function_exists('base_find_allpart') || !function_exists('base_pid2part') || !function_exists('base_cid2cont')) {
+        if (!function_exists('base_find_allpart') || !function_exists('base_pid2part') || !function_exists('base_cid2cont')
+            || !function_exists('base_allpart2primpart')) {
             wachthond($extdebug, 1, "CRITICAL ERROR: Base functies niet gevonden!");
             return;
         }
@@ -48,11 +49,14 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
         }
         // 3. Haal PARTDITEVENT op
         if (empty($array_partditevent)) {
-            $pid = $allpart_array['result_allpart_pos_part_id'] 
-                ?? $allpart_array['result_allpart_pen_part_id']
-                ?? $allpart_array['result_allpart_wait_part_id']
-                ?? $allpart_array['result_allpart_one_part_id']
-                ?? NULL;
+            // Gedeelde, eenduidige selectie (base_allpart2primpart() in
+            // nl.onvergetelijk.base) — zelfde algoritme als core.php's ditjaar-oriëntatie en
+            // base_cid2primpart()'s fallback. Voorheen pakte deze naive ??-keten gewoon
+            // result_allpart_pos_part_id zonder te checken of er wel maar 1 positieve was;
+            // bij 2 gelijktijdige positieve registraties (bijv. leiding + deelnemer) gaf dat
+            // willekeurig welke van de twee de query als laatste teruggaf.
+            $primair = base_allpart2primpart($allpart_array);
+            $pid     = $primair['part_id'] ?? NULL;
             if ($pid) {
                 $array_partditevent = base_pid2part($pid);
             } else {
@@ -230,9 +234,13 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaar_one_deel_event_type_id   = $allpart_array['result_allpart_one_deel_event_type_id'];
     $eventjaar_one_leid_event_type_id   = $allpart_array['result_allpart_one_leid_event_type_id'];
 
-    $eventjaar_one_part_status_id       = $allpart_array['result_allpart_one_part_status_id']       ?? NULL;
-    $eventjaar_one_deel_part_status_id  = $allpart_array['result_allpart_one_deel_part_status_id']  ?? NULL;
-    $eventjaar_one_leid_part_status_id  = $allpart_array['result_allpart_one_leid_part_status_id']  ?? NULL;
+    // LET OP: base_find_allpart() levert deze keys ZONDER "_part_" infix
+    // (result_allpart_one_deel_status_id, niet result_allpart_one_deel_part_status_id).
+    // Met de foute key bleef dit altijd NULL, waardoor de wachtlijst-/annulering-
+    // branches in de waterval hieronder nooit matchten en alles op ERR (3) bleef staan.
+    $eventjaar_one_part_status_id       = $allpart_array['result_allpart_one_status_id']       ?? NULL;
+    $eventjaar_one_deel_part_status_id  = $allpart_array['result_allpart_one_deel_status_id']  ?? NULL;
+    $eventjaar_one_leid_part_status_id  = $allpart_array['result_allpart_one_leid_status_id']  ?? NULL;
 
     $eventjaar_one_kampkort             = $allpart_array['result_allpart_one_kampkort'];
     $eventjaar_one_deel_kampkort        = $allpart_array['result_allpart_one_deel_kampkort'];
@@ -250,9 +258,10 @@ function mee_civicrm_configure($contact_id, $allpart_array = NULL, $array_partdi
     $eventjaar_pos_deel_event_type_id   = $allpart_array['result_allpart_pos_deel_event_type_id'];
     $eventjaar_pos_leid_event_type_id   = $allpart_array['result_allpart_pos_leid_event_type_id'];
 
-    $eventjaar_pos_part_status_id       = $allpart_array['result_allpart_pos_part_status_id']       ?? NULL;
-    $eventjaar_pos_deel_part_status_id  = $allpart_array['result_allpart_pos_deel_part_status_id']  ?? NULL;
-    $eventjaar_pos_leid_part_status_id  = $allpart_array['result_allpart_pos_leid_part_status_id']  ?? NULL;
+    // Zelfde key-mismatch als hierboven bij de "one_" variant: geen "_part_" infix.
+    $eventjaar_pos_part_status_id       = $allpart_array['result_allpart_pos_status_id']       ?? NULL;
+    $eventjaar_pos_deel_part_status_id  = $allpart_array['result_allpart_pos_deel_status_id']  ?? NULL;
+    $eventjaar_pos_leid_part_status_id  = $allpart_array['result_allpart_pos_leid_status_id']  ?? NULL;
 
     $eventjaar_pos_kampkort             = $allpart_array['result_allpart_pos_kampkort'];
     $eventjaar_pos_deel_kampkort        = $allpart_array['result_allpart_pos_deel_kampkort'];

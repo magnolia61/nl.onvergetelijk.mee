@@ -64,9 +64,9 @@ class MeeConfigureTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
       'result_allpart_one_event_type_id'    => NULL,
       'result_allpart_one_deel_event_type_id' => NULL,
       'result_allpart_one_leid_event_type_id' => NULL,
-      'result_allpart_one_part_status_id'   => NULL,
-      'result_allpart_one_deel_part_status_id' => NULL,
-      'result_allpart_one_leid_part_status_id' => NULL,
+      'result_allpart_one_status_id'        => NULL,
+      'result_allpart_one_deel_status_id'   => NULL,
+      'result_allpart_one_leid_status_id'   => NULL,
       'result_allpart_one_kampkort'         => NULL,
       'result_allpart_one_deel_kampkort'    => NULL,
       'result_allpart_one_leid_kampkort'    => NULL,
@@ -79,9 +79,9 @@ class MeeConfigureTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
       'result_allpart_pos_event_type_id'    => NULL,
       'result_allpart_pos_deel_event_type_id' => NULL,
       'result_allpart_pos_leid_event_type_id' => NULL,
-      'result_allpart_pos_part_status_id'   => NULL,
-      'result_allpart_pos_deel_part_status_id' => NULL,
-      'result_allpart_pos_leid_part_status_id' => NULL,
+      'result_allpart_pos_status_id'        => NULL,
+      'result_allpart_pos_deel_status_id'   => NULL,
+      'result_allpart_pos_leid_status_id'   => NULL,
       'result_allpart_pos_kampkort'         => NULL,
       'result_allpart_pos_deel_kampkort'    => NULL,
       'result_allpart_pos_leid_kampkort'    => NULL,
@@ -471,7 +471,7 @@ class MeeConfigureTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
     // Simuleer: er is één positieve deelname dit jaar
     $allpart['result_allpart_pos_deel_count']          = 1;
     $allpart['result_allpart_pos_count']               = 1;
-    $allpart['result_allpart_pos_deel_part_status_id'] = $positiveIds[0];
+    $allpart['result_allpart_pos_deel_status_id'] = $positiveIds[0];
     $allpart['result_allpart_pos_deel_event_type_id']  = $deelEventTypes[0];
 
     $partditevent = self::legePartditeventArray($this->contactId, 'Mee Testpersoon');
@@ -508,7 +508,7 @@ class MeeConfigureTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
 
     // Simuleer: geen positieve deelname, maar wel een geannuleerde
     $allpart['result_allpart_pos_deel_count']           = 0;
-    $allpart['result_allpart_one_deel_part_status_id']  = $negativeIds[0];
+    $allpart['result_allpart_one_deel_status_id']  = $negativeIds[0];
 
     $partditevent = self::legePartditeventArray($this->contactId, 'Mee Testpersoon');
 
@@ -554,7 +554,7 @@ class MeeConfigureTest extends \PHPUnit\Framework\TestCase implements EndToEndIn
     // Simuleer: positieve leiding-inschrijving maar als bestuurslid
     $allpart['result_allpart_pos_leid_count']           = 1;
     $allpart['result_allpart_pos_count']                = 1;
-    $allpart['result_allpart_pos_leid_part_status_id']  = $positiveIds[0];
+    $allpart['result_allpart_pos_leid_status_id']  = $positiveIds[0];
     $allpart['result_allpart_pos_leid_event_type_id']   = $leidEventTypes[0];
     $allpart['result_allpart_pos_leid_kampfunctie']     = 'bestuurslid'; // staf-functie
 
